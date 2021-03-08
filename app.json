@@ -1,0 +1,12 @@
+{
+  "name": "tetris-clone",
+  "displayName": "tetris-clone",
+  "expo": {
+    "name": "tetris-clone",
+    "slug": "tetris-clone",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
