@@ -13,7 +13,15 @@ for (let i = 0; i < 20; i++) {
 export default function scene() {
   const [board, setBoard] = useState(gameBoard);
   const [press, setPress] = useState(null);
-  const [tetromino, setTetromino] = useState({ x: 0, y: 3 });
+  const [move, setMove] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [speed, setSpeed] = useState(1000);
+  const [tetromino, setTetromino] = useState([
+    { x: 0, y: 3 },
+    { x: 0, y: 4 },
+    { x: 0, y: 5 },
+    { x: 0, y: 6 },
+  ]);
 
   const setFilled = (x, y) => {
     setBoard((prevBoard) => {
@@ -25,31 +33,52 @@ export default function scene() {
 
   const reset = () => {
     setBoard(gameBoard);
-    setTetromino({ x: 0, y: 3 });
-    setFilled(0, 3);
+    setTetromino([
+      { x: 0, y: 3 },
+      { x: 0, y: 4 },
+      { x: 0, y: 5 },
+      { x: 0, y: 6 },
+    ]);
+    tetromino.forEach(({ x, y }) => setFilled(x, y));
   };
 
   const advance = () => {
-    setTetromino(({ x, y }) => {
-      if (x + 1 < 20 && !board[x + 1][y].filled) {
-        setFilled(x, y);
-        setFilled(x + 1, y);
-        return { x: x + 1, y };
+    setTetromino((prev) => {
+      let canMove = true;
+      prev.forEach(({ x, y }) => {
+        if (x + 1 >= 20) canMove = false;
+        else if (board[x + 1][y].filled) canMove = false;
+      });
+      if (canMove) {
+        return prev.map(({ x, y }) => {
+          setFilled(x, y);
+          setFilled(x + 1, y);
+          return { x: x + 1, y };
+        });
       } else {
-        setFilled(0, 3);
-        return { x: 0, y: 3 };
+        return prev.map((square, index) => {
+          setFilled(0, 3 + index);
+          return { x: 0, y: 3 + index };
+        });
       }
     });
   };
 
   const lateral = (value) => {
-    setTetromino(({ x, y }) => {
-      if (y + value >= 0 && y + value < 10 && !board[x][y + value].filled) {
-        setFilled(x, y);
-        setFilled(x, y + value);
-        return { x, y: y + value };
-      } else return { x, y };
+    setTetromino((prev) => {
+      if (prev[0].y + value >= 0 && prev[3].y + value < 10) {
+        return prev.map(({ x, y }) => {
+          setFilled(x, y);
+          setFilled(x, y + value);
+          return { x, y: y + value };
+        });
+      }
+      return prev;
     });
+  };
+
+  const pause = () => {
+    setPaused((prev) => !prev);
   };
 
   const gestureStart = ({ nativeEvent: { locationX, locationY } }) => {
@@ -61,12 +90,23 @@ export default function scene() {
       lateral(-1);
     } else if (locationX > press.locationX) {
       lateral(1);
-    } else advance();
+    }
   };
 
   useEffect(() => {
-    setFilled(tetromino.x, tetromino.y);
+    tetromino.forEach((square) => {
+      setFilled(square.x, square.y);
+    });
   }, []);
+
+  useEffect(() => {
+    if (!paused) {
+      advance();
+      setTimeout(() => {
+        setMove((prev) => prev + 1);
+      }, speed);
+    }
+  }, [move, paused]);
 
   return (
     <View
@@ -83,12 +123,12 @@ export default function scene() {
               x={col.x}
               y={col.y}
               filled={col.filled}
-              setFilled={setFilled}
             />
           );
         });
       })}
       <Button onPress={reset} title="reset" />
+      <Button onPress={pause} title={paused ? "play" : "pause"} />
     </View>
   );
 }

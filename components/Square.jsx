@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 
-export default function Square({ x, y, filled, setFilled }) {
+export default function Square({ x, y, filled }) {
   const [squareStyle, setSquareStyle] = useState([styles.square]);
 
   useEffect(() => {
