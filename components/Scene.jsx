@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, Button } from 'react-native'
 import Square from './Square'
+import tetrominoes from '../scripts/tetrominoes'
 
 const gameBoard = []
 for (let i = 0; i < 20; i++) {
@@ -10,58 +11,14 @@ for (let i = 0; i < 20; i++) {
   }
 }
 
-const tetrominoes = {
-  line: [
-    { x: 0, y: 3 },
-    { x: 0, y: 4 },
-    { x: 0, y: 5 },
-    { x: 0, y: 6 },
-  ],
-  square: [
-    { x: 0, y: 4 },
-    { x: 0, y: 5 },
-    { x: 1, y: 4 },
-    { x: 1, y: 5 },
-  ],
-  L: [
-    { x: 0, y: 3 },
-    { x: 0, y: 4 },
-    { x: 0, y: 5 },
-    { x: 1, y: 3 },
-  ],
-  backL: [
-    { x: 0, y: 3 },
-    { x: 0, y: 4 },
-    { x: 0, y: 5 },
-    { x: 1, y: 5 },
-  ],
-  T: [
-    { x: 0, y: 3 },
-    { x: 0, y: 4 },
-    { x: 0, y: 5 },
-    { x: 1, y: 4 },
-  ],
-  Z: [
-    { x: 0, y: 3 },
-    { x: 0, y: 4 },
-    { x: 1, y: 4 },
-    { x: 1, y: 5 },
-  ],
-  backZ: [
-    { x: 0, y: 4 },
-    { x: 0, y: 5 },
-    { x: 1, y: 3 },
-    { x: 1, y: 4 },
-  ],
-}
-
 const tetArray = ['line', 'square', 'L', 'backL', 'T', 'Z', 'backZ']
 
 const chooseTetromino = () => {
   const rand = Math.floor(Math.random() * tetArray.length)
   return tetArray[rand]
 }
-const initial = chooseTetromino()
+// let tet = chooseTetromino()
+let tet = 'backZ'
 
 export default function scene() {
   const [board, setBoard] = useState(gameBoard)
@@ -69,12 +26,21 @@ export default function scene() {
   const [move, setMove] = useState(0)
   const [paused, setPaused] = useState(false)
   const [speed, setSpeed] = useState(500)
-  const [tetromino, setTetromino] = useState(tetrominoes[initial])
+  const [tetromino, setTetromino] = useState(tetrominoes[tet].initial)
+  const [rotation, setRotation] = useState(0)
 
   const setFilled = (x, y) => {
     setBoard((prevBoard) => {
       const newBoard = [...prevBoard]
-      newBoard[x][y].filled = newBoard[x][y].filled ? '' : 'filled'
+      newBoard[x][y].filled = 'filled'
+      return newBoard
+    })
+  }
+
+  const setClear = (x, y) => {
+    setBoard((prevBoard) => {
+      const newBoard = [...prevBoard]
+      newBoard[x][y].filled = ''
       return newBoard
     })
   }
@@ -99,13 +65,10 @@ export default function scene() {
 
   const reset = () => {
     setBoard(gameBoard)
-    setTetromino([
-      { x: 0, y: 3 },
-      { x: 0, y: 4 },
-      { x: 0, y: 5 },
-      { x: 0, y: 6 },
-    ])
-    tetromino.forEach(({ x, y }) => setFilled(x, y))
+    setTetromino(() => {
+      tet = chooseTetromino()
+      return tetrominoes[tet].initial
+    })
   }
 
   const advance = () => {
@@ -117,21 +80,17 @@ export default function scene() {
       })
       if (canMove) {
         return prev.map(({ x, y }) => {
-          setFilled(x, y)
-          setFilled(x + 1, y)
+          setClear(x, y)
           return { x: x + 1, y }
         })
       } else {
-        const newTet = chooseTetromino()
+        tet = chooseTetromino()
 
         prev.forEach(({ x, y }) => {
           setBlocked(x, y)
         })
         checkLines()
-        tetrominoes[newTet].forEach(({ x, y }) => {
-          setFilled(x, y)
-        })
-        return tetrominoes[newTet]
+        return tetrominoes[tet].initial
       }
     })
   }
@@ -140,8 +99,7 @@ export default function scene() {
     setTetromino((prev) => {
       if (prev[0].y + value >= 0 && prev[3].y + value < 10) {
         return prev.map(({ x, y }) => {
-          setFilled(x, y)
-          setFilled(x, y + value)
+          setClear(x, y)
           return { x, y: y + value }
         })
       }
@@ -173,11 +131,30 @@ export default function scene() {
     })
   }
 
-  useEffect(() => {
-    tetromino.forEach((square) => {
-      setFilled(square.x, square.y)
+  const spin = () => {
+    setTetromino((prev) => {
+      const spinIndex = rotation
+      const { spin } = tetrominoes[tet]
+      setRotation((prev) => {
+        if (prev + 1 < spin.length) {
+          return prev + 1
+        } else return 0
+      })
+      return prev.map(({ x, y }, index) => {
+        setClear(x, y)
+        return {
+          x: x + spin[spinIndex].x[index],
+          y: y + spin[spinIndex].y[index],
+        }
+      })
     })
-  }, [])
+  }
+
+  useEffect(() => {
+    tetromino.forEach(({ x, y }) => {
+      setFilled(x, y)
+    })
+  }, [tetromino])
 
   useEffect(() => {
     if (!paused) {
@@ -207,6 +184,7 @@ export default function scene() {
           )
         })
       })}
+      <Button onPress={spin} title="spin" />
       <Button onPress={reset} title="reset" />
       <Button onPress={pause} title={paused ? 'play' : 'pause'} />
     </View>
