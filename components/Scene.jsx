@@ -17,8 +17,8 @@ const chooseTetromino = () => {
   const rand = Math.floor(Math.random() * tetArray.length)
   return tetArray[rand]
 }
-// let tet = chooseTetromino()
-let tet = 'backZ'
+
+let tet = chooseTetromino()
 
 export default function scene() {
   const [board, setBoard] = useState(gameBoard)
@@ -90,6 +90,7 @@ export default function scene() {
           setBlocked(x, y)
         })
         checkLines()
+        setRotation(0)
         return tetrominoes[tet].initial
       }
     })
@@ -135,6 +136,8 @@ export default function scene() {
     setTetromino((prev) => {
       const spinIndex = rotation
       const { spin } = tetrominoes[tet]
+      const adjust = boundsCheck(spin[spinIndex], tetromino)
+
       setRotation((prev) => {
         if (prev + 1 < spin.length) {
           return prev + 1
@@ -144,10 +147,26 @@ export default function scene() {
         setClear(x, y)
         return {
           x: x + spin[spinIndex].x[index],
-          y: y + spin[spinIndex].y[index],
+          y: y + spin[spinIndex].y[index] + adjust,
         }
       })
     })
+  }
+
+  const boundsCheck = (spin, tetromino) => {
+    let adjust = 0
+    tetromino.forEach(({ x, y }, index) => {
+      let target = y + spin.y[index]
+      console.log(target)
+      if (target < 0) {
+        adjust = Math.max(adjust, Math.abs(target))
+      } else if (target > 9) {
+        adjust = Math.min(adjust, 9 - target)
+        console.log(target, adjust)
+      }
+    })
+
+    return adjust
   }
 
   useEffect(() => {
