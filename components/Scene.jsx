@@ -137,7 +137,7 @@ export default function scene() {
       const spinIndex = rotation
       const { spin } = tetrominoes[tet]
       const adjust = boundsCheck(spin[spinIndex], tetromino)
-
+      console.log(adjust)
       setRotation((prev) => {
         if (prev + 1 < spin.length) {
           return prev + 1
@@ -146,26 +146,40 @@ export default function scene() {
       return prev.map(({ x, y }, index) => {
         setClear(x, y)
         return {
-          x: x + spin[spinIndex].x[index],
-          y: y + spin[spinIndex].y[index] + adjust,
+          x: x + spin[spinIndex].x[index] + adjust.x,
+          y: y + spin[spinIndex].y[index] + adjust.y,
         }
       })
     })
   }
 
   const boundsCheck = (spin, tetromino) => {
-    let adjust = 0
+    const adjust = {
+      x: 0,
+      y: 0,
+    }
     tetromino.forEach(({ x, y }, index) => {
-      let target = y + spin.y[index]
-      console.log(target)
-      if (target < 0) {
-        adjust = Math.max(adjust, Math.abs(target))
-      } else if (target > 9) {
-        adjust = Math.min(adjust, 9 - target)
-        console.log(target, adjust)
-      }
-    })
+      const targetY = y + spin.y[index]
+      const targetX = x + spin.x[index]
 
+      function checkSides(target, plane) {
+        const upperBound = plane === 'y' ? 9 : 19
+        if (target < 0) {
+          adjust[plane] = Math.max(adjust[plane], Math.abs(target))
+        } else if (target > upperBound) {
+          adjust[plane] = Math.min(adjust[plane], upperBound - target)
+        }
+      }
+
+      checkSides(targetY, 'y')
+      checkSides(targetX, 'x')
+
+      // if (targetY < 0) {
+      //   adjust.y = Math.max(adjust.y, Math.abs(targetY))
+      // } else if (targetY > 9) {
+      //   adjust.y = Math.min(adjust.y, 9 - targetY)
+      // }
+    })
     return adjust
   }
 
