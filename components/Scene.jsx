@@ -37,30 +37,32 @@ export default function scene() {
     })
   }
 
-  const setClear = (x, y) => {
+  const setClear = (y, x) => {
     setBoard((prevBoard) => {
       const newBoard = [...prevBoard]
-      newBoard[x][y].filled = ''
+      newBoard[y][x].filled = ''
       return newBoard
     })
   }
 
-  const setBlocked = (x, y) => {
+  const setBlocked = (y, x) => {
     setBoard((prevBoard) => {
       const newBoard = [...prevBoard]
-      newBoard[x][y].filled = 'blocked'
+      newBoard[y][x].filled = 'blocked'
       return newBoard
     })
   }
 
-  const clearLine = (row) => {
-    setBoard((prevBoard) => {
-      const newBoard = [...prevBoard]
-      row.forEach(({ x, y }) => {
-        newBoard[y][x].filled = ''
+  const clearLine = (row, rowIndex) => {
+    for (let i = 0; i < rowIndex; i++) {
+      board[i].forEach(({ y, x }) => {
+        if (board[y][x].filled === 'blocked') {
+          setBlocked(y + 1, x)
+        } else if (board[y][x].filled === '') {
+          setClear(y + 1, x)
+        }
       })
-      return newBoard
-    })
+    }
   }
 
   const reset = () => {
@@ -72,6 +74,7 @@ export default function scene() {
   }
 
   const advance = () => {
+    checkLines()
     setTetromino((prev) => {
       let canMove = true
       prev.forEach(({ x, y }) => {
@@ -89,7 +92,7 @@ export default function scene() {
         prev.forEach(({ x, y }) => {
           setBlocked(x, y)
         })
-        checkLines()
+
         setRotation(0)
         return tetrominoes[tet].initial
       }
@@ -127,7 +130,7 @@ export default function scene() {
   const checkLines = () => {
     board.forEach((row, index) => {
       if (row.every(({ filled }) => filled === 'blocked')) {
-        clearLine(row)
+        clearLine(row, index)
       }
     })
   }
@@ -173,12 +176,6 @@ export default function scene() {
 
       checkSides(targetY, 'y')
       checkSides(targetX, 'x')
-
-      // if (targetY < 0) {
-      //   adjust.y = Math.max(adjust.y, Math.abs(targetY))
-      // } else if (targetY > 9) {
-      //   adjust.y = Math.min(adjust.y, 9 - targetY)
-      // }
     })
     return adjust
   }
