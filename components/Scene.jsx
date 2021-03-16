@@ -67,6 +67,7 @@ export default function scene() {
 
   const reset = () => {
     setBoard(gameBoard)
+    setRotation(0)
     setTetromino(() => {
       tet = chooseTetromino()
       return tetrominoes[tet].initial
@@ -101,7 +102,15 @@ export default function scene() {
 
   const lateral = (value) => {
     setTetromino((prev) => {
-      if (prev[0].y + value >= 0 && prev[3].y + value < 10) {
+      let canMove = true
+      prev.forEach(({ y, x }) => {
+        if (y + value < 0 || y + value > 9) {
+          canMove = false
+        } else if (board[x][y + value].filled === 'blocked') {
+          canMove = false
+        }
+      })
+      if (canMove) {
         return prev.map(({ x, y }) => {
           setClear(x, y)
           return { x, y: y + value }
@@ -120,11 +129,23 @@ export default function scene() {
   }
 
   const checkGesture = ({ nativeEvent: { locationX } }) => {
-    if (locationX < 0) {
-      lateral(-1)
-    } else if (locationX > press.locationX) {
+    if (press.locationX === locationX) {
+      spin()
+    }
+    setSpeed(500)
+  }
+
+  const checkMove = ({ nativeEvent: { locationX, locationY } }) => {
+    if (press.locationX - locationX < -20) {
       lateral(1)
-    } else advance()
+      setPress({ locationX, locationY })
+    } else if (press.locationX - locationX > 20) {
+      setPress({ locationX, locationY })
+      lateral(-1)
+    } else if (press.locationY - locationY < -20) {
+      advance()
+      setPress({ locationX, locationY })
+    }
   }
 
   const checkLines = () => {
@@ -140,19 +161,33 @@ export default function scene() {
       const spinIndex = rotation
       const { spin } = tetrominoes[tet]
       const adjust = boundsCheck(spin[spinIndex], tetromino)
-      console.log(adjust)
-      setRotation((prev) => {
-        if (prev + 1 < spin.length) {
-          return prev + 1
-        } else return 0
-      })
-      return prev.map(({ x, y }, index) => {
-        setClear(x, y)
+      let canSpin = true
+
+      const newPos = prev.map(({ x, y }, index) => {
         return {
           x: x + spin[spinIndex].x[index] + adjust.x,
           y: y + spin[spinIndex].y[index] + adjust.y,
         }
       })
+
+      newPos.forEach(({ x, y }) => {
+        if (board[x][y].filled === 'blocked') {
+          canSpin = false
+        }
+      })
+
+      if (canSpin) {
+        setRotation((prev) => {
+          if (prev + 1 < spin.length) {
+            return prev + 1
+          } else return 0
+        })
+        prev.forEach(({ x, y }) => {
+          setClear(x, y)
+        })
+
+        return newPos
+      } else return prev
     })
   }
 
@@ -200,6 +235,7 @@ export default function scene() {
       style={styles.scene}
       onStartShouldSetResponder={(event) => true}
       onResponderGrant={gestureStart}
+      onResponderMove={checkMove}
       onResponderRelease={checkGesture}
     >
       {board.map((row) => {
