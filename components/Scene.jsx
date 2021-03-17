@@ -27,6 +27,7 @@ export default function scene({ increaseScore, score }) {
   const [paused, setPaused] = useState(false)
   const [gameOver, setGameOver] = useState(false)
   const [speed, setSpeed] = useState(500)
+  const [prevSpeed, setPrevSpeed] = useState(500)
   const [tetromino, setTetromino] = useState(tetrominoes[tet].initial)
   const [rotation, setRotation] = useState(0)
 
@@ -48,20 +49,20 @@ export default function scene({ increaseScore, score }) {
     })
   }
 
-  const setBlocked = (y, x) => {
+  const setBlocked = (y, x, color) => {
     setBoard((prevBoard) => {
       const newBoard = [...prevBoard]
       newBoard[y][x].filled = 'blocked'
-      newBoard[y][x].color = tetrominoes[tet].color
+      newBoard[y][x].color = color
       return newBoard
     })
   }
 
   const clearLine = (row, rowIndex) => {
     for (let i = 0; i < rowIndex; i++) {
-      board[i].forEach(({ y, x }) => {
+      board[i].forEach(({ y, x, color }) => {
         if (board[y][x].filled === 'blocked') {
-          setBlocked(y + 1, x)
+          setBlocked(y + 1, x, color)
         } else if (board[y][x].filled === '') {
           setClear(y + 1, x)
         }
@@ -73,7 +74,17 @@ export default function scene({ increaseScore, score }) {
     setGameOver(false)
     setPaused(false)
     increaseScore(-score)
-    setBoard(gameBoard)
+    setSpeed(500)
+    setBoard(() => {
+      const newBoard = []
+      for (let i = 0; i < 20; i++) {
+        newBoard.push([])
+        for (let j = 0; j < 10; j++) {
+          newBoard[i].push({ y: i, x: j, filled: '', color: '' })
+        }
+      }
+      return newBoard
+    })
     setRotation(0)
     setTetromino(() => {
       tet = chooseTetromino()
@@ -99,8 +110,9 @@ export default function scene({ increaseScore, score }) {
           return { x: x + 1, y }
         })
       } else {
+        const color = tetrominoes[tet].color
         prev.forEach(({ x, y }) => {
-          setBlocked(x, y)
+          setBlocked(x, y, color)
         })
         tet = chooseTetromino()
         setRotation(0)
@@ -135,13 +147,14 @@ export default function scene({ increaseScore, score }) {
 
   const gestureStart = ({ nativeEvent: { locationX, locationY } }) => {
     setPress({ locationX, locationY })
+    setPrevSpeed(speed)
   }
 
   const checkGesture = ({ nativeEvent: { locationX } }) => {
     if (press.locationX === locationX) {
       spin()
     }
-    setSpeed(500)
+    setSpeed(prevSpeed)
   }
 
   const checkMove = ({ nativeEvent: { locationX, locationY } }) => {
@@ -151,9 +164,8 @@ export default function scene({ increaseScore, score }) {
     } else if (press.locationX - locationX > 20) {
       setPress({ locationX, locationY })
       lateral(-1)
-    } else if (press.locationY - locationY < -20) {
-      advance()
-      setPress({ locationX, locationY })
+    } else if (press.locationY - locationY < -15) {
+      setSpeed(1)
     }
   }
 
@@ -164,6 +176,7 @@ export default function scene({ increaseScore, score }) {
         clearLine(row, index)
         increaseScore(100 * multiplier)
         multiplier++
+        setSpeed((prev) => prev - 100)
       }
     })
   }
