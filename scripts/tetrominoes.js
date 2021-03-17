@@ -16,6 +16,7 @@ const tetrominoes = {
         x: [1, -0, -1, -2],
       },
     ],
+    color: 'red',
   },
   square: {
     initial: [
@@ -34,6 +35,7 @@ const tetrominoes = {
         y: [0, 0, 0, 0],
       },
     ],
+    color: 'yellow',
   },
   L: {
     initial: [
@@ -60,6 +62,7 @@ const tetrominoes = {
         y: [-1, 0, 1, -2],
       },
     ],
+    color: 'blue',
   },
   backL: {
     initial: [
@@ -86,6 +89,7 @@ const tetrominoes = {
         y: [-1, 0, 1, 0],
       },
     ],
+    color: 'orange',
   },
   T: {
     initial: [
@@ -112,6 +116,7 @@ const tetrominoes = {
         y: [-1, 0, 1, -1],
       },
     ],
+    color: 'white',
   },
   Z: {
     initial: [
@@ -130,6 +135,7 @@ const tetrominoes = {
         y: [-1, 0, 1, 2],
       },
     ],
+    color: 'green',
   },
   backZ: {
     initial: [
@@ -148,6 +154,7 @@ const tetrominoes = {
         y: [0, 1, 0, 1],
       },
     ],
+    color: 'purple',
   },
 }
 

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, View } from 'react-native'
 
-export default function Square({ x, y, filled }) {
+export default function Square({ x, y, filled, color }) {
   const [squareStyle, setSquareStyle] = useState([styles.square])
 
   useEffect(() => {
     setSquareStyle(
-      filled ? [styles.square, styles.highlighted] : [styles.square]
+      filled ? [styles.square, { backgroundColor: color }] : [styles.square]
     )
   }, [filled])
 

@@ -7,7 +7,7 @@ const gameBoard = []
 for (let i = 0; i < 20; i++) {
   gameBoard.push([])
   for (let j = 0; j < 10; j++) {
-    gameBoard[i].push({ y: i, x: j, filled: '' })
+    gameBoard[i].push({ y: i, x: j, filled: '', color: '' })
   }
 }
 
@@ -20,11 +20,12 @@ const chooseTetromino = () => {
 
 let tet = chooseTetromino()
 
-export default function scene() {
+export default function scene({ increaseScore, score }) {
   const [board, setBoard] = useState(gameBoard)
   const [press, setPress] = useState(null)
   const [move, setMove] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [gameOver, setGameOver] = useState(false)
   const [speed, setSpeed] = useState(500)
   const [tetromino, setTetromino] = useState(tetrominoes[tet].initial)
   const [rotation, setRotation] = useState(0)
@@ -33,6 +34,7 @@ export default function scene() {
     setBoard((prevBoard) => {
       const newBoard = [...prevBoard]
       newBoard[x][y].filled = 'filled'
+      newBoard[x][y].color = tetrominoes[tet].color
       return newBoard
     })
   }
@@ -41,6 +43,7 @@ export default function scene() {
     setBoard((prevBoard) => {
       const newBoard = [...prevBoard]
       newBoard[y][x].filled = ''
+      newBoard[y][x].color = ''
       return newBoard
     })
   }
@@ -49,6 +52,7 @@ export default function scene() {
     setBoard((prevBoard) => {
       const newBoard = [...prevBoard]
       newBoard[y][x].filled = 'blocked'
+      newBoard[y][x].color = tetrominoes[tet].color
       return newBoard
     })
   }
@@ -66,6 +70,9 @@ export default function scene() {
   }
 
   const reset = () => {
+    setGameOver(false)
+    setPaused(false)
+    increaseScore(-score)
     setBoard(gameBoard)
     setRotation(0)
     setTetromino(() => {
@@ -75,6 +82,10 @@ export default function scene() {
   }
 
   const advance = () => {
+    if (board[0][3].filled === 'blocked') {
+      setPaused(true)
+      setGameOver(true)
+    }
     checkLines()
     setTetromino((prev) => {
       let canMove = true
@@ -88,12 +99,10 @@ export default function scene() {
           return { x: x + 1, y }
         })
       } else {
-        tet = chooseTetromino()
-
         prev.forEach(({ x, y }) => {
           setBlocked(x, y)
         })
-
+        tet = chooseTetromino()
         setRotation(0)
         return tetrominoes[tet].initial
       }
@@ -149,9 +158,12 @@ export default function scene() {
   }
 
   const checkLines = () => {
+    let multiplier = 1
     board.forEach((row, index) => {
       if (row.every(({ filled }) => filled === 'blocked')) {
         clearLine(row, index)
+        increaseScore(100 * multiplier)
+        multiplier++
       }
     })
   }
@@ -246,13 +258,17 @@ export default function scene() {
               x={col.x}
               y={col.y}
               filled={col.filled}
+              color={col.color}
             />
           )
         })
       })}
-      <Button onPress={spin} title="spin" />
       <Button onPress={reset} title="reset" />
-      <Button onPress={pause} title={paused ? 'play' : 'pause'} />
+      <Button
+        onPress={pause}
+        title={paused ? 'play' : 'pause'}
+        disabled={gameOver}
+      />
     </View>
   )
 }
