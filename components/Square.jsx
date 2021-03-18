@@ -16,9 +16,11 @@ export default function Square({ x, y, filled, color }) {
 const styles = StyleSheet.create({
   square: {
     width: '10%',
-    height: 32,
-    borderColor: 'white',
+    height: '4%',
+    borderColor: 'black',
     borderWidth: 1,
+    borderRadius: 2,
+    backgroundColor: 'black',
   },
   highlighted: {
     backgroundColor: 'red',

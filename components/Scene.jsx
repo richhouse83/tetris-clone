@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, Button } from 'react-native'
 import Square from './Square'
 import tetrominoes from '../scripts/tetrominoes'
+import { boundsCheck } from '../scripts/bounds'
 
 const gameBoard = []
 for (let i = 0; i < 20; i++) {
@@ -56,18 +57,6 @@ export default function scene({ increaseScore, score }) {
       newBoard[y][x].color = color
       return newBoard
     })
-  }
-
-  const clearLine = (row, rowIndex) => {
-    for (let i = 0; i < rowIndex; i++) {
-      board[i].forEach(({ y, x, color }) => {
-        if (board[y][x].filled === 'blocked') {
-          setBlocked(y + 1, x, color)
-        } else if (board[y][x].filled === '') {
-          setClear(y + 1, x)
-        }
-      })
-    }
   }
 
   const reset = () => {
@@ -158,10 +147,10 @@ export default function scene({ increaseScore, score }) {
   }
 
   const checkMove = ({ nativeEvent: { locationX, locationY } }) => {
-    if (press.locationX - locationX < -20) {
+    if (press.locationX - locationX < -25) {
       lateral(1)
       setPress({ locationX, locationY })
-    } else if (press.locationX - locationX > 20) {
+    } else if (press.locationX - locationX > 25) {
       setPress({ locationX, locationY })
       lateral(-1)
     } else if (press.locationY - locationY < -15) {
@@ -173,10 +162,10 @@ export default function scene({ increaseScore, score }) {
     let multiplier = 1
     board.forEach((row, index) => {
       if (row.every(({ filled }) => filled === 'blocked')) {
-        clearLine(row, index)
+        clearLine(row, index, board)
         increaseScore(100 * multiplier)
         multiplier++
-        setSpeed((prev) => prev - 100)
+        setSpeed((prev) => prev - 50)
       }
     })
   }
@@ -216,28 +205,16 @@ export default function scene({ increaseScore, score }) {
     })
   }
 
-  const boundsCheck = (spin, tetromino) => {
-    const adjust = {
-      x: 0,
-      y: 0,
-    }
-    tetromino.forEach(({ x, y }, index) => {
-      const targetY = y + spin.y[index]
-      const targetX = x + spin.x[index]
-
-      function checkSides(target, plane) {
-        const upperBound = plane === 'y' ? 9 : 19
-        if (target < 0) {
-          adjust[plane] = Math.max(adjust[plane], Math.abs(target))
-        } else if (target > upperBound) {
-          adjust[plane] = Math.min(adjust[plane], upperBound - target)
+  const clearLine = (row, rowIndex, board) => {
+    for (let i = 0; i < rowIndex; i++) {
+      board[i].forEach(({ y, x, color }) => {
+        if (board[y][x].filled === 'blocked') {
+          setBlocked(y + 1, x, color)
+        } else if (board[y][x].filled === '') {
+          setClear(y + 1, x)
         }
-      }
-
-      checkSides(targetY, 'y')
-      checkSides(targetX, 'x')
-    })
-    return adjust
+      })
+    }
   }
 
   useEffect(() => {
@@ -292,9 +269,9 @@ const styles = StyleSheet.create({
     fontSize: 32,
   },
   scene: {
-    backgroundColor: 'black',
-    width: '90%',
-    height: '90%',
+    backgroundColor: 'white',
+    width: '70%',
+    height: '74%',
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignContent: 'center',
