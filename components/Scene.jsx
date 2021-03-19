@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, Button } from 'react-native'
 import Square from './Square'
+import Next from './Next'
 import tetrominoes from '../scripts/tetrominoes'
 import { boundsCheck } from '../scripts/bounds'
 
@@ -19,6 +20,12 @@ const chooseTetromino = () => {
   return tetArray[rand]
 }
 
+const initialArray = []
+
+for (let i = 0; i < 3; i++) {
+  initialArray[i] = chooseTetromino()
+}
+
 let tet = chooseTetromino()
 
 export default function scene({ increaseScore, score }) {
@@ -29,8 +36,17 @@ export default function scene({ increaseScore, score }) {
   const [gameOver, setGameOver] = useState(false)
   const [speed, setSpeed] = useState(500)
   const [prevSpeed, setPrevSpeed] = useState(500)
+  const [nextArray, setNextArray] = useState(initialArray)
   const [tetromino, setTetromino] = useState(tetrominoes[tet].initial)
   const [rotation, setRotation] = useState(0)
+
+  const nextTetromino = (prevArr) => {
+    const newArr = [...prevArr]
+    newArr.shift()
+    newArr.push(chooseTetromino())
+
+    return newArr
+  }
 
   const setFilled = (x, y) => {
     setBoard((prevBoard) => {
@@ -103,7 +119,8 @@ export default function scene({ increaseScore, score }) {
         prev.forEach(({ x, y }) => {
           setBlocked(x, y, color)
         })
-        tet = chooseTetromino()
+        setNextArray(nextTetromino)
+        tet = nextArray[0]
         setRotation(0)
         return tetrominoes[tet].initial
       }
@@ -111,23 +128,25 @@ export default function scene({ increaseScore, score }) {
   }
 
   const lateral = (value) => {
-    setTetromino((prev) => {
-      let canMove = true
-      prev.forEach(({ y, x }) => {
-        if (y + value < 0 || y + value > 9) {
-          canMove = false
-        } else if (board[x][y + value].filled === 'blocked') {
-          canMove = false
-        }
-      })
-      if (canMove) {
-        return prev.map(({ x, y }) => {
-          setClear(x, y)
-          return { x, y: y + value }
+    if (!paused) {
+      setTetromino((prev) => {
+        let canMove = true
+        prev.forEach(({ y, x }) => {
+          if (y + value < 0 || y + value > 9) {
+            canMove = false
+          } else if (board[x][y + value].filled === 'blocked') {
+            canMove = false
+          }
         })
-      }
-      return prev
-    })
+        if (canMove) {
+          return prev.map(({ x, y }) => {
+            setClear(x, y)
+            return { x, y: y + value }
+          })
+        }
+        return prev
+      })
+    }
   }
 
   const pause = () => {
@@ -171,38 +190,40 @@ export default function scene({ increaseScore, score }) {
   }
 
   const spin = () => {
-    setTetromino((prev) => {
-      const spinIndex = rotation
-      const { spin } = tetrominoes[tet]
-      const adjust = boundsCheck(spin[spinIndex], tetromino)
-      let canSpin = true
+    if (!paused) {
+      setTetromino((prev) => {
+        const spinIndex = rotation
+        const { spin } = tetrominoes[tet]
+        const adjust = boundsCheck(spin[spinIndex], tetromino)
+        let canSpin = true
 
-      const newPos = prev.map(({ x, y }, index) => {
-        return {
-          x: x + spin[spinIndex].x[index] + adjust.x,
-          y: y + spin[spinIndex].y[index] + adjust.y,
-        }
-      })
-
-      newPos.forEach(({ x, y }) => {
-        if (board[x][y].filled === 'blocked') {
-          canSpin = false
-        }
-      })
-
-      if (canSpin) {
-        setRotation((prev) => {
-          if (prev + 1 < spin.length) {
-            return prev + 1
-          } else return 0
-        })
-        prev.forEach(({ x, y }) => {
-          setClear(x, y)
+        const newPos = prev.map(({ x, y }, index) => {
+          return {
+            x: x + spin[spinIndex].x[index] + adjust.x,
+            y: y + spin[spinIndex].y[index] + adjust.y,
+          }
         })
 
-        return newPos
-      } else return prev
-    })
+        newPos.forEach(({ x, y }) => {
+          if (board[x][y].filled === 'blocked') {
+            canSpin = false
+          }
+        })
+
+        if (canSpin) {
+          setRotation((prev) => {
+            if (prev + 1 < spin.length) {
+              return prev + 1
+            } else return 0
+          })
+          prev.forEach(({ x, y }) => {
+            setClear(x, y)
+          })
+
+          return newPos
+        } else return prev
+      })
+    }
   }
 
   const clearLine = (row, rowIndex, board) => {
@@ -240,6 +261,7 @@ export default function scene({ increaseScore, score }) {
       onResponderMove={checkMove}
       onResponderRelease={checkGesture}
     >
+      {paused && <Text style={styles.paused}>PAUSED</Text>}
       {board.map((row) => {
         return row.map((col) => {
           return (
@@ -259,15 +281,12 @@ export default function scene({ increaseScore, score }) {
         title={paused ? 'play' : 'pause'}
         disabled={gameOver}
       />
+      <Next nextArray={nextArray} />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  sceneText: {
-    color: 'white',
-    fontSize: 32,
-  },
   scene: {
     backgroundColor: 'white',
     width: '70%',
@@ -276,5 +295,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignContent: 'center',
     justifyContent: 'center',
+  },
+  paused: {
+    color: 'white',
+    position: 'absolute',
+    top: '45%',
+    zIndex: 10,
+    fontSize: 20,
+    fontWeight: 'bold',
   },
 })

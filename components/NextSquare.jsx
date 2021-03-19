@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, View } from 'react-native'
 
-export default function Square({ x, y, filled, color }) {
+export default function NextSquare({ x, y, filled, color }) {
   const [squareStyle, setSquareStyle] = useState([styles.square])
 
   useEffect(() => {
     setSquareStyle(
-      filled ? [styles.square, { backgroundColor: color }] : [styles.square]
+      filled ? [styles.square, { backgroundColor: 'black' }] : [styles.square]
     )
   }, [filled])
 
@@ -15,11 +15,12 @@ export default function Square({ x, y, filled, color }) {
 
 const styles = StyleSheet.create({
   square: {
-    width: '10%',
-    height: '4%',
-    borderColor: 'black',
-    borderWidth: 1,
+    width: '24%',
+    height: '18%',
+    borderColor: 'white',
     borderRadius: 2,
-    backgroundColor: 'black',
+    borderWidth: 1,
+
+    backgroundColor: 'transparent',
   },
 })

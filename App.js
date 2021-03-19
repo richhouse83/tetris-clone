@@ -11,8 +11,10 @@ export default function App() {
   }
   return (
     <View style={styles.container}>
-      <Text>Tetris Clone</Text>
-      <Text>Current Score: {score}</Text>
+      <View style={styles.textBox}>
+        <Text style={styles.text}>Tetris Clone</Text>
+        <Text style={styles.text}>Current Score: {score}</Text>
+      </View>
       <StatusBar style="auto" />
       <Scene increaseScore={increaseScore} score={score} />
     </View>
@@ -25,5 +27,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  textBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+  },
+  text: {
+    paddingHorizontal: '5%',
+    fontSize: 15,
   },
 })
