@@ -261,7 +261,12 @@ export default function scene({ increaseScore, score }) {
       onResponderMove={checkMove}
       onResponderRelease={checkGesture}
     >
-      {paused && <Text style={styles.paused}>PAUSED</Text>}
+      <Next nextArray={nextArray} />
+      {paused && (
+        <Text style={styles.paused}>
+          {gameOver ? `GAME OVER \n SCORE: ${score}` : 'PAUSED'}
+        </Text>
+      )}
       {board.map((row) => {
         return row.map((col) => {
           return (
@@ -281,7 +286,6 @@ export default function scene({ increaseScore, score }) {
         title={paused ? 'play' : 'pause'}
         disabled={gameOver}
       />
-      <Next nextArray={nextArray} />
     </View>
   )
 }
@@ -303,5 +307,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
     fontSize: 20,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
 })

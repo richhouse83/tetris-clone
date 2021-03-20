@@ -53,9 +53,10 @@ export default function NextItem({ tet }) {
 const styles = StyleSheet.create({
   nextItem: {
     width: '25%',
+    height: '100%',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignItems: 'center',
+    marginTop: '20%',
     justifyContent: 'space-between',
   },
 })
