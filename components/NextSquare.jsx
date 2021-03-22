@@ -17,10 +17,8 @@ const styles = StyleSheet.create({
   square: {
     width: '24%',
     height: '18%',
-    borderColor: 'white',
-    borderRadius: 2,
-    borderWidth: 1,
+    marginBottom: 1,
 
-    backgroundColor: 'transparent',
+    borderRadius: 2,
   },
 })

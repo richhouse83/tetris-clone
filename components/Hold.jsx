@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { TouchableOpacity, Text, StyleSheet } from 'react-native'
 import NextItem from './NextItem'
 
-export default function Next({ nextArray }) {
+export default function Hold({ holdTet, hold }) {
   return (
-    <View style={styles.nextBox}>
-      <Text style={styles.nextText}>Next:</Text>
-      {nextArray.map((tet, index) => {
+    <TouchableOpacity onPress={hold} style={styles.holdBox}>
+      <Text style={styles.holdText}>Hold:</Text>
+      {holdTet.map((tet, index) => {
         return <NextItem key={index} tet={tet} />
       })}
-    </View>
+    </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
-  nextBox: {
+  holdBox: {
     width: '100%',
     height: '12%',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.548)',
   },
-  nextText: {
+  holdText: {
     color: 'black',
     fontSize: 20,
     fontWeight: 'bold',

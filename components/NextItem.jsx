@@ -16,19 +16,31 @@ export default function NextItem({ tet }) {
   const tetromino = tetrominoes[tet]
 
   useEffect(() => {
-    setBoard(() => {
-      const newBoard = []
-      for (let i = 0; i < 2; i++) {
-        newBoard.push([])
-        for (let j = 0; j < 4; j++) {
-          newBoard[i].push({ y: i, x: j, filled: '', color: '' })
+    if (tet) {
+      setBoard(() => {
+        const newBoard = []
+        for (let i = 0; i < 2; i++) {
+          newBoard.push([])
+          for (let j = 0; j < 4; j++) {
+            newBoard[i].push({ y: i, x: j, filled: '', color: '' })
+          }
         }
-      }
-      tetromino.initial.forEach(({ x, y }) => {
-        newBoard[x][y - 3].filled = 'filled'
+        tetromino.initial.forEach(({ x, y }) => {
+          newBoard[x][y - 3].filled = 'filled'
+        })
+        return newBoard
       })
-      return newBoard
-    })
+    } else
+      setBoard(() => {
+        const newBoard = []
+        for (let i = 0; i < 2; i++) {
+          newBoard.push([])
+          for (let j = 0; j < 4; j++) {
+            newBoard[i].push({ y: i, x: j, filled: '', color: '' })
+          }
+        }
+        return newBoard
+      })
   }, [tet])
 
   return (

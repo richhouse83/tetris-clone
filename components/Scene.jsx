@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { StyleSheet, Text, View, Button } from 'react-native'
+import {
+  StyleSheet,
+  Text,
+  View,
+  Button,
+  TouchableWithoutFeedback,
+} from 'react-native'
 import Square from './Square'
 import Next from './Next'
+import Hold from './Hold'
 import tetrominoes from '../scripts/tetrominoes'
 import { boundsCheck } from '../scripts/bounds'
 
@@ -39,6 +46,8 @@ export default function scene({ increaseScore, score }) {
   const [nextArray, setNextArray] = useState(initialArray)
   const [tetromino, setTetromino] = useState(tetrominoes[tet].initial)
   const [rotation, setRotation] = useState(0)
+  const [holdTet, setHoldTet] = useState(null)
+  const [hasHeld, setHasHeld] = useState(false)
 
   const nextTetromino = (prevArr) => {
     const newArr = [...prevArr]
@@ -80,6 +89,8 @@ export default function scene({ increaseScore, score }) {
     setPaused(false)
     increaseScore(-score)
     setSpeed(500)
+    setHasHeld(false)
+    setHoldTet(null)
     setBoard(() => {
       const newBoard = []
       for (let i = 0; i < 20; i++) {
@@ -92,7 +103,8 @@ export default function scene({ increaseScore, score }) {
     })
     setRotation(0)
     setTetromino(() => {
-      tet = chooseTetromino()
+      setNextArray(nextTetromino)
+      tet = nextArray[0]
       return tetrominoes[tet].initial
     })
   }
@@ -115,6 +127,7 @@ export default function scene({ increaseScore, score }) {
           return { x: x + 1, y }
         })
       } else {
+        setHasHeld(false)
         const color = tetrominoes[tet].color
         prev.forEach(({ x, y }) => {
           setBlocked(x, y, color)
@@ -238,6 +251,36 @@ export default function scene({ increaseScore, score }) {
     }
   }
 
+  const hold = () => {
+    if (!paused && !hasHeld) {
+      setHasHeld(true)
+      if (!holdTet) {
+        setHoldTet(tet)
+        setRotation(0)
+        setTetromino((prev) => {
+          prev.forEach(({ x, y }) => {
+            setClear(x, y)
+          })
+          setNextArray(nextTetromino)
+          tet = nextArray[0]
+          return tetrominoes[tet].initial
+        })
+      } else {
+        const swapIn = holdTet
+        const swapOut = tet
+        setHoldTet(swapOut)
+        setRotation(0)
+        setTetromino((prev) => {
+          prev.forEach(({ x, y }) => {
+            setClear(x, y)
+          })
+          tet = swapIn
+          return tetrominoes[tet].initial
+        })
+      }
+    }
+  }
+
   useEffect(() => {
     tetromino.forEach(({ x, y }) => {
       setFilled(x, y)
@@ -261,12 +304,21 @@ export default function scene({ increaseScore, score }) {
       onResponderMove={checkMove}
       onResponderRelease={checkGesture}
     >
+      <View style={styles.buttons}>
+        <Button onPress={reset} title="reset" />
+        <Button
+          onPress={pause}
+          title={paused ? 'play' : 'pause'}
+          disabled={gameOver}
+        />
+      </View>
       <Next nextArray={nextArray} />
       {paused && (
         <Text style={styles.paused}>
           {gameOver ? `GAME OVER \n SCORE: ${score}` : 'PAUSED'}
         </Text>
       )}
+      <View style={styles.backdrop} />
       {board.map((row) => {
         return row.map((col) => {
           return (
@@ -280,25 +332,27 @@ export default function scene({ increaseScore, score }) {
           )
         })
       })}
-      <Button onPress={reset} title="reset" />
-      <Button
-        onPress={pause}
-        title={paused ? 'play' : 'pause'}
-        disabled={gameOver}
-      />
+      <Hold holdTet={[holdTet]} hold={hold} />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   scene: {
-    backgroundColor: 'white',
     width: '70%',
-    height: '74%',
+    height: '81%',
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignContent: 'center',
     justifyContent: 'center',
+  },
+  backdrop: {
+    position: 'absolute',
+    top: '12.6%',
+    height: '80%',
+    zIndex: -1,
+    width: '100%',
+    backgroundColor: 'white',
   },
   paused: {
     color: 'white',
@@ -308,5 +362,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  buttons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    width: '100%',
+    alignItems: 'center',
   },
 })
